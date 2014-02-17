@@ -18,7 +18,8 @@ CREATE TABLE message
 );
 ALTER TABLE message ADD CONSTRAINT message_fk1 FOREIGN KEY (room_id) REFERENCES room(id);
 
--- CREATE RULE "notify_on_insert_message" AS ON INSERT TO message DO NOTIFY new_message, id;
+
+CREATE LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION notify_new_message() RETURNS trigger AS $$
 DECLARE
 BEGIN

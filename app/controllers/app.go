@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"chatex/app/models"
 	"github.com/robfig/revel"
 )
 
@@ -9,5 +10,7 @@ type App struct {
 }
 
 func (self App) Index() revel.Result {
-	return self.Render()
+	var r = make(map[string][]models.Room)
+	r["rooms"] = models.GetRoomList()
+	return self.Render(r)
 }

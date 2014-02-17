@@ -1,0 +1,82 @@
+{{set . "title" "Room" }}
+{{template "header.html" .}}
+
+<script type="text/javascript">
+
+  var ws = new WebSocket('ws://'+window.location.host+'/room/{{.room.Id}}/sub')
+
+  ws.onopen = function() {
+    console.log("Соединение установлено.");
+  };
+
+  ws.onclose = function(event) {
+    if (event.wasClean) {
+      console.log('Соединение закрыто чисто');
+    } else {
+      console.log('Обрыв соединения');
+    }
+    console.log('Код: ' + event.code + ' причина: ' + event.reason);
+  };
+
+  ws.onmessage = function(event) {
+    var msg = JSON.parse(event.data)
+    console.log("Получены данные", msg);
+    showMessage(msg);
+  };
+
+  ws.onerror = function(error) {
+    console.log("Ошибка " + error.message);
+  };
+
+  var showMessage = function(msg){
+    var $el = $('<li>');
+    $el.addClass("list-group-item");
+    $el.html(msg.Text);
+    $("#messages").prepend($el)
+  }
+
+  var publishMessage = function(text){
+
+  }
+
+  $(function(){
+
+    $("#form").on('submit', function(e){
+      var form = $(e.target)
+      var text = $('[name=text]', form).val();
+      $.post(form.attr('action'), form.serialize());
+      return false;
+    });
+
+    $.get("{{url "Room.History" .room.Id}}", function(data){
+      console.log(data);
+      $(data).each(function(idx, msg){
+        showMessage(msg);
+      })
+    });
+
+  });
+</script>
+<br>
+<div class="content">
+  <div class="row">
+    <div class="col-md-12">
+      <form id="form" method="post" action="{{url "Room.Publish" .room.Id}}">
+        <div class="form-group">
+          <input id="send" class="form-control" type="text" value="" name="text" placeholder="Type a message and press enter">
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <ul class="list-group" id="messages">
+
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+{{template "footer.html" .}}

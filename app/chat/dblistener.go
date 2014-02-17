@@ -2,7 +2,6 @@ package chat
 
 import (
 	"chatex/app/models"
-	"fmt"
 	"github.com/lib/pq"
 	"github.com/robfig/revel"
 	"strconv"
@@ -15,13 +14,13 @@ func listenerEventsHandler(event pq.ListenerEventType, err error) {
 		panic(err)
 	}
 	if event == pq.ListenerEventConnected {
-		fmt.Println("Database listener successfully connected")
+		revel.INFO.Println("Database listener successfully connected")
 	}
 
 }
 
 func listenMessages() {
-	fmt.Println("Setting up db listening")
+	revel.TRACE.Println("Setting up db listening")
 	var Spec, _ = revel.Config.String("db.spec")
 	var listener = pq.NewListener(Spec, 10*time.Second, time.Minute, listenerEventsHandler)
 	var err = listener.Listen("new_message")
@@ -42,20 +41,23 @@ func waitForNotification(l *pq.Listener) {
 			if err != nil {
 				panic(err)
 			}
+
 			roomId, err := strconv.ParseInt(payload[1], 10, 64)
 			if err != nil {
 				panic(err)
 			}
+
 			msg := models.Message{
 				Id:     id,
 				RoomId: roomId,
 				Text:   payload[2],
 			}
-			fmt.Printf("received notification with payload: '%d' '%d' '%s'\n", msg.Id, msg.RoomId, msg.Text)
-			EventChannel <- &Event{
+
+			revel.INFO.Printf("received notification with payload: '%d' '%d' '%s'\n", msg.Id, msg.RoomId, msg.Text)
+			Publish(&Event{
 				Type:    EVENT_MSG,
 				Payload: msg,
-			}
+			})
 
 		case <-time.After(200 * time.Millisecond):
 			go func() {

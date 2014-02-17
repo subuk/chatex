@@ -4,7 +4,8 @@
 
 module:testrunner
 
-GET     /                                       App.Index
+GET     /                                           App.Index
+GET     /room/:roomId                               Room.Show
 POST    /room/:roomId/pub                           Room.Publish
 WS      /room/:roomId/sub                           Room.Subscribe
 GET     /room/:roomId/history                       Room.History

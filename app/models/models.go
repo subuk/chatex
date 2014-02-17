@@ -26,6 +26,22 @@ func GetRoom(id int64) *Room {
 	return room
 }
 
+func GetRoomList() []Room {
+	var rooms []Room
+
+	rows, err := db.Db.Query("SELECT id FROM room ORDER BY id")
+	if err != nil {
+		panic(err)
+	}
+
+	for rows.Next() {
+		var room = Room{}
+		rows.Scan(&room.Id)
+		rooms = append(rooms, room)
+	}
+	return rooms
+}
+
 func (self *Room) GetMessages() []Message {
 	var messages []Message
 	var msg Message
