@@ -3,7 +3,22 @@
 
 <script type="text/javascript">
 
-  var ws = new WebSocket('ws://'+window.location.host+'/room/{{.room.Id}}/sub')
+  var EVENT = {
+    'MSG': 1,
+    'NEW_USER': 2,
+    'PING': 3,
+    'USER_DISCONNECTED': 4
+  }
+
+  var WSURL = 'ws://'+window.location.host+'/room/{{.room.Id}}/sub'
+
+  var DateTimeFmt = function(d){
+    return "Hh"
+  }
+
+
+  console.log('Using '+WSURL+'as stream source')
+  var ws = new ReconnectingWebSocket(WSURL);
 
   ws.onopen = function() {
     console.log("Соединение установлено.");
@@ -19,9 +34,28 @@
   };
 
   ws.onmessage = function(event) {
-    var msg = JSON.parse(event.data)
-    console.log("Получены данные", msg);
-    showMessage(msg);
+    var chatEvent = JSON.parse(event.data)
+    if (chatEvent.Type == EVENT.MSG) {
+      console.log('Event: new message', chatEvent.Payload);
+      var msg = chatEvent.Payload;
+      showMessage(chatEvent.Payload);
+
+    } else if (chatEvent.Type == EVENT.PING){
+      console.log('Event: ping');
+
+    } else if (chatEvent.Type == EVENT.NEW_USER){
+      console.log('Event: new user');
+      var info = chatEvent.Payload;
+      // showMessage({'Text': 'New user '+info.Username+' connected.'})
+
+    } else if (chatEvent.Type == EVENT.USER_DISCONNECTED) {
+      var info = chatEvent.Payload;
+      // showMessage({'Text': 'User '+info.Username+' disconnected.'})
+
+    } else {
+      console.log('Unknown event');
+    }
+
   };
 
   ws.onerror = function(error) {
@@ -29,10 +63,10 @@
   };
 
   var showMessage = function(msg){
-    var $el = $('<li>');
-    $el.addClass("list-group-item");
-    $el.html(msg.Text);
-    $("#messages").prepend($el)
+    var date = new Date();
+    date.setTime(Date.parse(msg.CreateTime))
+    msg.CreateTimePretty = date.toLocaleString()
+    $('#tpl-message').tmpl(msg).prependTo($("#messages"))
   }
 
   var publishMessage = function(text){
@@ -58,23 +92,58 @@
 
   });
 </script>
+
+
+<script id="tpl-message" type="text/x-jquery-tmpl">
+
+<div class="media">
+  <a class="pull-left" href="${ImageUrl}">
+    <img style="width: 200px; height: auto;" class="media-object" src="${ImageUrl}" alt="">
+  </a>
+  <div style="width: 50%; min-height: 200px; padding-left: 20px;" class="media-body">
+    <h4>Anonymous [${CreateTimePretty}]</h4>
+    <p>${Text}</p>
+  </div>
+  <hr>
+</div>
+
+</script>
+
 <br>
-<div class="content">
+<div class="container">
   <div class="row">
+
     <div class="col-md-12">
+
       <form id="form" method="post" action="{{url "Room.Publish" .room.Id}}">
-        <div class="form-group">
-          <input id="send" class="form-control" type="text" value="" name="text" placeholder="Type a message and press enter">
+        <div class="col-md-4">
+          <div class="form-group">
+              <input id="send" class="form-control" type="text" value="" name="text" placeholder="Type a message and press enter">
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-group">
+              <input id="send" class="form-control" type="text" value="" name="image_url" placeholder="Image url">
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-group">
+            <button class="btn btn-default" type="submit">Submit</button>
+          </div>
         </div>
       </form>
+
     </div>
+
   </div>
+
+  <br><br>
 
   <div class="row">
     <div class="col-md-12">
-      <ul class="list-group" id="messages">
+      <div id="messages">
 
-      </ul>
+      </div>
     </div>
   </div>
 

@@ -41,23 +41,16 @@ func waitForNotification(l *pq.Listener) {
 			if err != nil {
 				panic(err)
 			}
-
-			roomId, err := strconv.ParseInt(payload[1], 10, 64)
+			var roomId int64
+			roomId, err = strconv.ParseInt(payload[1], 10, 64)
 			if err != nil {
 				panic(err)
 			}
 
-			msg := models.Message{
-				Id:     id,
-				RoomId: roomId,
-				Text:   payload[2],
-			}
+			msg := models.GetMessage(id)
 
-			revel.INFO.Printf("received notification with payload: '%d' '%d' '%s'\n", msg.Id, msg.RoomId, msg.Text)
-			Publish(&Event{
-				Type:    EVENT_MSG,
-				Payload: msg,
-			})
+			revel.INFO.Printf("received notification with payload: '%d' '%d' '%s' '%s'\n", msg.Id, msg.RoomId, msg.Text, msg.ImageUrl)
+			Publish(EVENT_MSG, int64(roomId), *msg)
 
 		case <-time.After(200 * time.Millisecond):
 			go func() {

@@ -4,6 +4,7 @@ import (
 	"chatex/app/chat"
 	"chatex/app/models"
 	"code.google.com/p/go.net/websocket"
+	"fmt"
 	"github.com/robfig/revel"
 )
 
@@ -27,13 +28,14 @@ func (self Room) History(roomId int64) revel.Result {
 	return self.RenderJson(room.GetMessages())
 }
 
-func (self Room) Publish(roomId int64, text string) revel.Result {
+func (self Room) Publish(roomId int64, text string, image_url string) revel.Result {
 	var room = models.GetRoom(roomId)
 	if room == nil {
 		return self.NotFound("Room was not found")
 	}
 	var msg = models.Message{
-		Text: text,
+		Text:     text,
+		ImageUrl: image_url,
 	}
 	room.AddMessage(msg)
 	return self.RenderJson(true)
@@ -45,36 +47,35 @@ func (self Room) Subscribe(ws *websocket.Conn, roomId int64) revel.Result {
 		return self.NotFound("Room was not found")
 	}
 
-	eventChannel, el := chat.Join()
-	defer chat.Cancel(el)
+	sub := chat.Join(fmt.Sprintf("Anonymous[%s]", ws.Request().RemoteAddr), roomId)
+
+	defer chat.Cancel(sub)
+	defer ws.Close()
 
 	for {
-		e := <-eventChannel
+		event := <-sub.Channel
+		revel.INFO.Printf("%s: Received chat event %s", sub.String(), event.String())
 
-		if e.Type == chat.EVENT_MSG {
-			var msg = e.Payload.(models.Message)
-			if msg.RoomId == room.Id {
-				revel.INFO.Printf("Publishing message with text %s to room #%d\n", msg.Text, msg.RoomId)
-				if websocket.JSON.Send(ws, msg) != nil {
-					revel.WARN.Println("Client disconnected")
-					break
-				}
+		if event.Type == chat.EVENT_MSG {
+			revel.INFO.Printf("Publishing message to room #%d\n", event.RoomId)
+			if websocket.JSON.Send(ws, event) != nil {
+				revel.WARN.Println("Client disconnected")
+				break
 			}
-		} else if e.Type == chat.EVENT_NEW_USER {
-			if e.Payload.(int64) == room.Id {
-				revel.INFO.Printf("New anoymous joined room #%d\n", room.Id)
-				msg := models.Message{
-					Text: "New user joined!",
-				}
-				if websocket.JSON.Send(ws, msg) != nil {
-					revel.WARN.Println("Client disconnected")
-					break
-				}
+		} else if event.Type == chat.EVENT_PING {
+			if websocket.JSON.Send(ws, event) != nil {
+				revel.WARN.Println("Client disconnected")
+				break
 			}
+		} else if event.Type == chat.EVENT_NEW_USER {
+			websocket.JSON.Send(ws, event)
+		} else if event.Type == chat.EVENT_USER_DISCONNECTED {
+			websocket.JSON.Send(ws, event)
+		} else {
+			revel.ERROR.Fatal("Unknown event", event)
 		}
 
 	}
 
-	ws.Close()
 	return nil
 }

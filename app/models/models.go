@@ -10,6 +10,7 @@ type Message struct {
 	RoomId     int64
 	CreateTime time.Time
 	Text       string
+	ImageUrl   string
 }
 
 type Room struct {
@@ -42,18 +43,28 @@ func GetRoomList() []Room {
 	return rooms
 }
 
+func GetMessage(id int64) *Message {
+	var msg Message
+	row := db.Db.QueryRow("SELECT id, text, create_time, image_url FROM message WHERE id=$1", id)
+	if row == nil {
+		return nil
+	}
+	row.Scan(&msg.Id, &msg.Text, &msg.CreateTime, &msg.ImageUrl)
+	return &msg
+}
+
 func (self *Room) GetMessages() []Message {
 	var messages []Message
-	var msg Message
 
-	rows, err := db.Db.Query("SELECT id, text, create_time FROM message WHERE room_id = $1", self.Id)
+	rows, err := db.Db.Query("SELECT id, text, create_time, image_url FROM message WHERE room_id = $1 ORDER BY id", self.Id)
 	if err != nil {
 		panic(err)
 	}
 
+	var msg Message
 	for rows.Next() {
 		msg = Message{RoomId: self.Id}
-		rows.Scan(&msg.Id, &msg.Text, &msg.CreateTime)
+		rows.Scan(&msg.Id, &msg.Text, &msg.CreateTime, &msg.ImageUrl)
 		messages = append(messages, msg)
 	}
 
@@ -62,7 +73,7 @@ func (self *Room) GetMessages() []Message {
 
 func (self *Room) AddMessage(message Message) {
 	message.RoomId = self.Id
-	row, err := db.Db.Query("INSERT INTO message (room_id, text) VALUES ($1, $2) RETURNING id, create_time", message.RoomId, message.Text)
+	row, err := db.Db.Query("INSERT INTO message (room_id, text, image_url) VALUES ($1, $2, $3) RETURNING id, create_time", message.RoomId, message.Text, message.ImageUrl)
 	if err != nil {
 		panic(err)
 	}
