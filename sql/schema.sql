@@ -1,4 +1,3 @@
-
 -- SCHEMA
 CREATE SEQUENCE room_id_seq;
 CREATE TABLE room
