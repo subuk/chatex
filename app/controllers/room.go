@@ -29,6 +29,10 @@ func (self Room) History(roomId int64) revel.Result {
 }
 
 func (self Room) Publish(roomId int64, text string, image_url string) revel.Result {
+	self.Validation.Required(text)
+	if self.Validation.HasErrors() {
+		return self.RenderJson("text required")
+	}
 	var room = models.GetRoom(roomId)
 	if room == nil {
 		return self.NotFound("Room was not found")
