@@ -12,11 +12,6 @@
 
   var WSURL = 'ws://'+window.location.host+'/room/{{.room.Id}}/sub'
 
-  var DateTimeFmt = function(d){
-    return "Hh"
-  }
-
-
   console.log('Using '+WSURL+'as stream source')
   var ws = new ReconnectingWebSocket(WSURL);
 
@@ -38,7 +33,12 @@
     if (chatEvent.Type == EVENT.MSG) {
       console.log('Event: new message', chatEvent.Payload);
       var msg = chatEvent.Payload;
-      showMessage(chatEvent.Payload);
+      if (Visibility.state() != "visible") {
+        console.log('Page is not visible. Sending notification', msg);
+        showNotification(msg);
+      }
+      showMessage(msg);
+
 
     } else if (chatEvent.Type == EVENT.PING){
       console.log('Event: ping');
@@ -69,11 +69,20 @@
     $('#tpl-message').tmpl(msg).prependTo($("#messages"))
   }
 
-  var publishMessage = function(text){
-
+  var showNotification = function(msg){
+    var n = new Notify(window.location.hostname+'['+{{.room.Id}}+']', {
+      body: msg.Text,
+      tag: "board" + {{ .room.Id }} + "#" + msg.Id,
+      icon: msg.ImageUrl,
+    });
+    n.show();
   }
 
   $(function(){
+    var notification = new Notify('Thanks!');
+    if(notification.needsPermission()){
+      notification.requestPermission();
+    }
 
     $("#form").on('submit', function(e){
       var form = $(e.target);
@@ -84,7 +93,6 @@
     });
 
     $.get("{{url "Room.History" .room.Id}}", function(data){
-      console.log(data);
       $(data).each(function(idx, msg){
         showMessage(msg);
       })
