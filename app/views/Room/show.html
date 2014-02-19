@@ -79,6 +79,7 @@
   }
 
   $(function(){
+
     var notification = new Notify('Thanks!');
     if(notification.needsPermission()){
       notification.requestPermission();
@@ -105,6 +106,30 @@
   });
 </script>
 
+<script type="text/javascript">
+  $(function(){
+    $("#message-form").hide();
+    $("#show-message-form").show();
+
+    $("#show-message-form").on('click', function(){
+      $(this).hide();
+      $("#message-form").show();
+    });
+    $("#hide-message-form").on('click', function(){
+      $("#show-message-form").show();
+      $("#message-form").hide();
+    });
+
+    $('#message-form').keydown(function (e) {
+      if (e.ctrlKey && e.keyCode == 13) {
+        $('form', this).submit();
+        return false;
+      }
+    });
+
+  });
+</script>
+
 
 <script id="tpl-message" type="text/x-jquery-tmpl">
 
@@ -112,40 +137,17 @@
   <a class="pull-left" href="${ImageUrl}">
     <img style="width: 200px; height: auto;" class="media-object" src="${ImageUrl}" alt="">
   </a>
-  <div style="width: 50%; min-height: 200px; padding-left: 20px;" class="media-body">
-    <h4>Anonymous [${CreateTimePretty}]</h4>
-    <p>${Text}</p>
+  <div style="padding-left: 20px;" class="media-body">
+    <p><i style="border-bottom: 1px dashed #ccc">Anonymous, ${CreateTimePretty}</i></p>
+    <p style="white-space: pre-wrap;">${Text}</p>
   </div>
-  <hr>
 </div>
-
+<br>
 </script>
 
 <br>
 <div class="container">
   <div class="row">
-
-    <div class="col-md-12">
-
-      <form id="form" method="post" action="{{url "Room.Publish" .room.Id}}">
-        <div class="col-md-4">
-          <div class="form-group">
-              <input id="send" class="form-control" type="text" value="" name="text" placeholder="Type a message and press enter">
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="form-group">
-              <input id="send" class="form-control" type="text" value="" name="image_url" placeholder="Image url">
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="form-group">
-            <button class="btn btn-default" type="submit">Submit</button>
-          </div>
-        </div>
-      </form>
-
-    </div>
 
   </div>
 
@@ -159,6 +161,52 @@
     </div>
   </div>
 
+  <br><br><br>
+
+  <div style="padding: 15px 30px 0px 30px;" class="navbar navbar-default navbar-fixed-bottom">
+    <div class="row">
+      <div class="col-md-12">
+        <button id="show-message-form" style="margin-bottom: 15px;" class="btn btn-primary">Ответить</button>
+      </div>
+    </div>
+
+    <div id="message-form">
+      <form id="form" method="post" action="{{url "Room.Publish" .room.Id}}">
+
+        <div class="row">
+          <div class="col-md-12">
+            <div class="form-group">
+              <textarea required style="resize: vertical; height: 200px;" class="form-control" name="text" placeholder="Текст сообщения"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-8">
+            <div class="form-group">
+                <input class="form-control" type="text" value="" name="image_url" autocomplete="off" placeholder="Ссылка на картинку">
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <button class="btn btn-primary" title="[Ctrl-Enter]" type="submit">Отправить</button>
+              <span style="color: #ccc">&nbsp;&nbsp; (Ctrl-Enter)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-12">
+            <div class="form-group">
+              <button id="hide-message-form" class="btn btn-default" type="submit">Скрыть</button>
+            </div>
+          </div>
+        </div>
+
+      </form>
+    </div>
+
+  </div>
 </div>
 
 {{template "footer.html" .}}
