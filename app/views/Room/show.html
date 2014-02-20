@@ -63,10 +63,11 @@
   };
 
   var showMessage = function(msg){
+    formatMessage(msg);
     var date = new Date();
     date.setTime(Date.parse(msg.CreateTime))
     msg.CreateTimePretty = date.toLocaleString()
-    $('#tpl-message').tmpl(msg).prependTo($("#messages"))
+    $("#messages").prepend(MESSAGE_TPL({msg: msg}));
   }
 
   var showNotification = function(msg){
@@ -78,7 +79,28 @@
     n.show();
   }
 
+  var QUOTE_REGEX = new RegExp('^(\s*)>');
+  var BOLD_REGEX = /[*]{2}([^*]+)[*]{2}/g;
+
+  var formatMessage = function(msg){
+    var newText = "";
+    var lines = msg.Text.split("\n");
+    for(var i=0, l = lines.length; i < l; i++){
+        var line = lines[i];
+        if (line.match(QUOTE_REGEX)){
+          line = '<span style="color: #789922">' + _.escape(line) + '</span>';
+        } else {
+          line = _.escape(line);
+        }
+        newText +=  line + "<br>";
+    }
+    newText = newText.replace(BOLD_REGEX, "<b>$1</b>");
+    msg.Text = newText;
+  }
+  var MESSAGE_TPL;
   $(function(){
+
+    MESSAGE_TPL = _.template($('#tpl-message').html());
 
     var notification = new Notify('Thanks!');
     if(notification.needsPermission()){
@@ -134,12 +156,12 @@
 <script id="tpl-message" type="text/x-jquery-tmpl">
 
 <div class="media">
-  <a class="pull-left" href="${ImageUrl}">
-    <img style="width: 200px; height: auto;" class="media-object" src="${ImageUrl}" alt="">
+  <a class="pull-left" href="<%- msg.ImageUrl %>">
+    <img style="width: 200px; height: auto;" class="media-object" src="<%- msg.ImageUrl %>" alt="">
   </a>
   <div style="padding-left: 20px;" class="media-body">
-    <p><i style="border-bottom: 1px dashed #ccc">Anonymous, ${CreateTimePretty}</i></p>
-    <p style="white-space: pre-wrap;">${Text}</p>
+    <p><i style="border-bottom: 1px dashed #ccc">Anonymous, <%- msg.CreateTimePretty %></i></p>
+    <p><%= msg.Text %></p>
   </div>
 </div>
 <br>
