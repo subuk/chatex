@@ -15,6 +15,12 @@
     <script src="{{.STATIC_URL}}js/visibility-1.1.0.min.js" type="text/javascript" charset="utf-8"></script>
     <script src="{{.STATIC_URL}}js/notify.js" type="text/javascript" charset="utf-8"></script>
 
+    <script src="{{.STATIC_URL}}js/swfobject.js" type="text/javascript" charset="utf-8"></script>
+    <script src="{{.STATIC_URL}}js/web_socket.js" type="text/javascript" charset="utf-8"></script>
+    <script type="text/javascript">
+      var WEB_SOCKET_SWF_LOCATION = "{{.STATIC_URL}}obj/WebSocketMain.swf";
+    </script>
+
     {{range .moreStyles}}
       <link rel="stylesheet" type="text/css" href="{{.STATIC_URL}}{{.}}">
     {{end}}
