@@ -12,7 +12,7 @@
 
   var WSURL = 'ws://'+window.location.host+'/room/{{.room.Id}}/sub'
 
-  console.log('Using '+WSURL+'as stream source')
+  console.log('Using '+WSURL+' as stream source')
   var ws = new ReconnectingWebSocket(WSURL);
 
   ws.onopen = function() {
@@ -84,6 +84,7 @@
 
   var formatMessage = function(msg){
     var newText = "";
+    msg.RawText = msg.Text;
     var lines = msg.Text.split("\n");
     for(var i=0, l = lines.length; i < l; i++){
         var line = lines[i];
@@ -125,6 +126,21 @@
       })
     });
 
+    $('body').on('click', '.reply', function(e){
+
+      var quoteText;
+      quoteText = $(e.target).parent().next().html();
+      quoteText = quoteText.replace(/<br>/g, '');
+      quoteText = quoteText.replace(/\n/g, '\n> ');
+      quoteText += "\n\n"
+
+      var textInput = $('#message-form').find('[name=text]')
+      textInput.val(textInput.val() + '> ' + quoteText);
+      $('#show-message-form').trigger('click');
+      textInput.focus();
+      return false;
+    });
+
   });
 </script>
 
@@ -160,7 +176,11 @@
     <img style="width: 200px; height: auto;" class="media-object" src="<%- msg.ImageUrl %>" alt="">
   </a>
   <div style="padding-left: 20px;" class="media-body">
-    <p><i style="border-bottom: 1px dashed #ccc">Anonymous, <%- msg.CreateTimePretty %></i></p>
+    <p>
+      <i style="border-bottom: 1px dashed #ccc">Anonymous, <%- msg.CreateTimePretty %></i>
+      <a class="reply" href="#">[Ответить]</a>
+    </p>
+    <p class="hide raw"><%= msg.RawText %></p>
     <p><%= msg.Text %></p>
   </div>
 </div>
