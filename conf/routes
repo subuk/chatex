@@ -9,7 +9,7 @@ GET     /room/:roomId                               Room.Show
 POST    /room/:roomId/pub                           Room.Publish
 WS      /room/:roomId/sub                           Room.Subscribe
 GET     /room/:roomId/history                       Room.History
-
+POST    /file/upload                                File.Upload
 
 # Ignore favicon requests
 GET     /favicon.ico                            404

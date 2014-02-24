@@ -55,9 +55,9 @@ func Publish(Type int, RoomId int64, Payload interface{}) {
 	for el := Subscribers.Front(); el != nil; el = el.Next() {
 		s := el.Value.(Subscription)
 		if evt.RoomId == s.RoomId || evt.RoomId == ALL_ROOMS {
-			revel.INFO.Printf("--> Publishing event %s to subscription %s", evt.String(), s.String())
+			revel.TRACE.Printf("--> Publishing event %s to subscription %s", evt.String(), s.String())
 			s.Channel <- &evt
-			revel.INFO.Printf("--> Event %s published to subscription %s", evt.String(), s.String())
+			revel.TRACE.Printf("--> Event %s published to subscription %s", evt.String(), s.String())
 		}
 	}
 }

@@ -58,7 +58,7 @@ func (self Room) Subscribe(ws *websocket.Conn, roomId int64) revel.Result {
 
 	for {
 		event := <-sub.Channel
-		revel.INFO.Printf("%s: Received chat event %s", sub.String(), event.String())
+		revel.TRACE.Printf("%s: Received chat event %s", sub.String(), event.String())
 
 		if event.Type == chat.EVENT_MSG {
 			revel.INFO.Printf("Publishing message to room #%d\n", event.RoomId)

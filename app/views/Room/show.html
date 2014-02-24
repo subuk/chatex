@@ -129,6 +129,38 @@
 </script>
 
 <script type="text/javascript">
+
+$(function () {
+    'use strict';
+
+    var url = '{{url "File.Upload" }}';
+    $('#fileupload').fileupload({
+        url: url,
+        acceptFileTypes: /(\.|\/)(gif|jpe?g|png)$/i,
+        disableImageResize: /Android(?!.*Chrome)|Opera/.test(window.navigator.userAgent),
+        dataType: 'json',
+        start: function(){
+          $('#upload-progress-modal').modal('show');
+        },
+        stop: function(){
+          $('#upload-progress-modal').modal('hide');
+        },
+        done: function(e, data) {
+
+          $('[name=image_url]').val(data.result.url);
+        },
+        progressall: function(e, data) {
+          var progress = parseInt(data.loaded / data.total * 100, 10);
+          $('#upload-progress-modal .progress-bar').css(
+              'width',
+              progress + '%'
+          );
+        }
+    }).prop('disabled', !$.support.fileInput).parent().addClass($.support.fileInput ? undefined : 'disabled');
+});
+</script>
+
+<script type="text/javascript">
   $(function(){
     $("#message-form").hide();
     $("#show-message-form").show();
@@ -204,18 +236,30 @@
         </div>
 
         <div class="row">
-          <div class="col-md-8">
-            <div class="form-group">
-                <input class="form-control" type="text" value="" name="image_url" autocomplete="off" placeholder="Ссылка на картинку">
+          <div class="col-md-6">
+            <div class="input-group">
+              <input class="form-control" type="text" value="" name="image_url" autocomplete="off" placeholder="Ссылка на картинку">
+              <span class="input-group-btn">
+                <span style="padding-left: 10px;padding-right: 10px;" class="btn btn-block btn-default fileinput-button">
+                  <span>Загрузить</span>
+                  <input id="fileupload" type="file" name="image">
+                </span>
+              </span>
+
             </div>
           </div>
-          <div class="col-md-4">
+
+          <div class="col-md-6">
             <div class="form-group">
               <button class="btn btn-primary" title="[Ctrl-Enter]" type="submit">Отправить</button>
               <span style="color: #ccc">&nbsp;&nbsp; (Ctrl-Enter)</span>
             </div>
           </div>
         </div>
+
+        <div class="row">
+        </div>
+
 
         <div class="row">
           <div class="col-md-12">
@@ -230,5 +274,27 @@
 
   </div>
 </div>
+
+<div id="upload-progress-modal" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Загрузка</h4>
+      </div>
+      <div class="modal-body">
+        <div class="progress">
+          <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+            <span class="sr-only"></span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Отменить</button>
+      </div>
+
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
 
 {{template "footer.html" .}}
