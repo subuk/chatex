@@ -14,30 +14,33 @@ type Message struct {
 }
 
 type Room struct {
-	Id int64
+	Id          int64
+	BoardId     int64
+	Description string
 }
 
 func GetRoom(id int64) *Room {
-	var count int64 = 0
-	var room *Room = nil
-	db.Db.QueryRow("SELECT COUNT(id) FROM room WHERE id=$1", id).Scan(&count)
-	if count != 0 {
-		room = &Room{Id: id}
+	row := db.Db.QueryRow("SELECT board_id, description FROM room WHERE id=$1", id)
+	if row == nil {
+		return nil
 	}
-	return room
+	room := Room{Id: id}
+	row.Scan(&room.BoardId, &room.Description)
+
+	return &room
 }
 
 func GetRoomList() []Room {
 	var rooms []Room
 
-	rows, err := db.Db.Query("SELECT id FROM room ORDER BY id")
+	rows, err := db.Db.Query("SELECT id, board_id, description FROM room ORDER BY id")
 	if err != nil {
 		panic(err)
 	}
 
 	for rows.Next() {
 		var room = Room{}
-		rows.Scan(&room.Id)
+		rows.Scan(&room.Id, &room.BoardId, &room.Description)
 		rooms = append(rooms, room)
 	}
 	return rooms
@@ -55,7 +58,6 @@ func GetMessage(id int64) *Message {
 
 func (self *Room) GetMessages() []Message {
 	var messages []Message
-
 	rows, err := db.Db.Query("SELECT id, text, create_time, image_url FROM message WHERE room_id = $1 ORDER BY id", self.Id)
 	if err != nil {
 		panic(err)
